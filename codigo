@@ -1,0 +1,254 @@
+#Desafío Preguntados
+#Ortega German 1-K
+import pygame
+from constantes import *
+"""Preguntados es una franquicia de entretenimiento de plataformas y una de las marcas más
+exitosas de la división de Gaming de Etermax.
+Preguntados es principalmente un juego de preguntas y respuestas de Cultura General tipo
+trivia. Digamos que este es el apartado en el que cabrían cuestiones de todo tipo. Si controlas
+datos históricos, orígenes de comidas, literatura y curiosidades de todo tipo, lograrás una buena
+puntuación.
+
+Recientemente Etermax ha decidido desarrollar el juego en Python, y para acceder a las
+entrevistas es necesario completar el siguiente desafío.
+
+La empresa compartió con todos los participantes cierta información confidencial de un grupo
+de preguntas y respuestas. Y semana a semana enviará una lista con los nuevos requerimientos.
+Quien supere todas las etapas accederá a una entrevista con el director para de la compañía.
+Set de datos
+
+La información a ser analizada se encuentra en el archivo datos.py, por tratarse de una lista,
+bastará con incluir dicho archivo en el proyecto de la siguiente manera:"""
+
+from datos import lista
+
+"""Desafío:
+A. Analizar detenidamente el set de datos.
+B. Recorrer la lista guardando en sub-listas: la pregunta, cada opción y la respuesta
+correcta.
+C. Crear 2 botones (rectángulos) uno con la etiqueta “Pregunta”, otro con la etiqueta
+“Reiniciar”
+D. Imprimir el Score: 999 donde se va a ir acumulando el puntaje de las respuestas
+correctas. Cada respuesta correcta suma 10 puntos.
+E. Al hacer clic en el botón (rectángulo) “Pregunta” debe mostrar las preguntas
+comenzando por la primera y las tres opciones, cada clic en este botón pasa a la
+siguiente pregunta.
+F. Al hacer clic en una de las tres palabras que representa una de las tres opciones, si es
+correcta, debe sumar el score y dejar de mostrar las opciones.
+G. Solo tiene 2 opciones para acertar la respuesta correcta y sumar puntos, si agotó ambas
+opciones, deja de mostrar las opciones y no suma score
+H. Al hacer clic en el botón (rectángulo) “Reiniciar” debe mostrar las preguntas
+comenzando por la primera y las tres opciones, cada clic pasa a la siguiente pregunta.
+También debe reiniciar el Score.
+"""
+
+
+pygame.init() #Se inicializa pygame
+pygame.mixer.init() #Se inicializa el mixer de sonido de pygame
+
+screen = pygame.display.set_mode([800, 600]) #Se crea una ventana
+pygame.display.set_caption("Preguntados") #el titulo
+
+#Sonidos
+sonido_correcto = pygame.mixer.Sound('Sonido de correcto de Preguntados.mp3')
+sonido_correcto.set_volume(0.3)
+sonido_incorrecto = pygame.mixer.Sound('Sonido de incorrecto de Preguntados.mp3')
+sonido_incorrecto.set_volume(0.3)
+sonido_final = pygame.mixer.Sound('Sonido de entrada 2 de Preguntados.mp3')
+sonido_final.set_volume(0.3)
+
+#fuente
+font = pygame.font.SysFont("Arial Narrow", 46) #fuente del texto
+font_dos = pygame.font.SysFont("Arial Narrow", 38)
+
+#Imagenes varias
+logo = pygame.image.load("Preguntados.jpg")
+logo = pygame.transform.scale(logo,(200,200))
+normal = pygame.image.load("3.jpg")
+normal = pygame.transform.scale(normal,(200,200))
+bad = pygame.image.load("2.jpg")
+bad = pygame.transform.scale(bad,(200,200))
+lose = pygame.image.load("1.jpg")
+lose = pygame.transform.scale(lose,(200,200))
+win = pygame.image.load("4.jpg")
+win = pygame.transform.scale(win,(200,200))
+uwu = pygame.image.load("uwu2.png")
+uwu = pygame.transform.scale(uwu,(300,200))
+tora = pygame.image.load("tora.jpeg")
+tora = pygame.transform.scale(tora,(200,315))
+
+#renderizado texto de pregunta y reinicio
+pregunta = font.render("Pregunta", True, (10,200,10))
+reiniciar = font.render("Reiniciar", True, (10,200,10))
+
+#listas
+lista_preguntas = []
+lista_opcion_a = []
+lista_opcion_b = []
+lista_opcion_c = []
+lista_respuestas = []
+
+#llenado de las listas
+for i in lista:
+    lista_preguntas.append(i["pregunta"])
+    lista_opcion_a.append(f'{i["a"]}')
+    lista_opcion_b.append(f'{i["b"]}')
+    lista_opcion_c.append(f'{i["c"]}')
+    lista_respuestas.append(i["correcta"])
+
+#contadores
+contador_preguntas = 0
+puntaje = 0
+vidas = 2
+
+#banderas
+correcto = 0
+error_a = 0
+error_b = 0
+error_c = 0
+flag_mensaje_final = 0
+
+#inicio del bucle
+running = True
+while running:
+    #renderizado de las listas
+    preguntas = font_dos.render(lista_preguntas[-1 +contador_preguntas], True, (10, 180, 180))
+    opcion_a = font_dos.render(lista_opcion_a[-1 +contador_preguntas], True, (10, 180, 180))
+    opcion_b = font_dos.render(lista_opcion_b[-1 +contador_preguntas], True, (10, 180, 180))
+    opcion_c = font_dos.render(lista_opcion_c[-1 +contador_preguntas], True, (10, 180, 180))
+
+    #mensajes finales
+    final = font.render((f"Respondiste {int(puntaje/10)} de {len(lista)} respuestas correctas"), True, (10, 180, 180))
+    mensaje_uno = font.render(("¡Segui intentando!"), True, (10, 180, 180))
+    mensaje_dos = font.render(("¡Excelente, segui por más!"), True, (10, 180, 180))
+    mensaje_tres = font.render(("¡Todas fueron correctas!"), True, (10, 180, 180))
+    mensaje_cuatro = font.render(("Foto de mi gatito de premio uwu"), True, (10, 180, 180))
+
+    #renderizado del puntaje
+    string_puntaje = f"Puntaje: {puntaje}"
+    mensaje_puntaje = font.render(string_puntaje, True, (10, 180, 180))
+
+    #color de fondo y texto
+    screen.fill((0,0,128))
+    screen.blit(mensaje_puntaje,(420,170))
+    screen.blit(logo,(10, 10))
+
+    #Dimensiones de los botones de respuesta
+    a = pygame.Rect((20,320), (230,80))
+    b = pygame.Rect((20,420), (230,80))
+    c = pygame.Rect((20,520), (230,80))
+
+    #Condicional para mostrar o no los botones de respuesta y cambio de imagen representativa de las chances
+    if contador_preguntas > 0:
+        screen.blit(preguntas,(20,250))
+        if vidas > 0 and correcto == 0:
+            # boton a
+            if error_a == 0:
+                pygame.draw.rect(screen, (0,0,200), a)
+                a_centrado = opcion_a.get_rect(center = a.center)
+                screen.blit(opcion_a,a_centrado)
+            # boton b
+            if error_b == 0:
+                pygame.draw.rect(screen, (0,0,200), b)
+                b_centrado = opcion_b.get_rect(center = b.center)
+                screen.blit(opcion_b, b_centrado)
+            # boton c
+            if error_c == 0:
+                pygame.draw.rect(screen, (0,0,200), c)
+                c_centrado = opcion_c.get_rect(center = c.center)
+                screen.blit(opcion_c, c_centrado)
+            
+            # imagenes a modo de representación de las vidas
+            if vidas == 2:
+                screen.blit(normal,(490,350))
+            elif vidas == 1:
+                screen.blit(bad,(490,350))
+        elif correcto == 1:
+            screen.blit(win,(490,350))
+        else:
+            screen.blit(lose,(490,350))
+
+    # boton pregunta
+    rect_pregunta = pygame.Rect((320, 30), (160,80))
+    pygame.draw.rect(screen, (255, 255, 0), rect_pregunta)
+    pregunta_centrado = pregunta.get_rect(center = rect_pregunta.center)
+    screen.blit(pregunta, pregunta_centrado)
+
+    # boton reiniciar
+    rect_reiniciar = pygame.Rect((595, 30), (160,80))
+    pygame.draw.rect(screen, (255, 255, 0), rect_reiniciar)
+    reinicio_centrado = reiniciar.get_rect(center = rect_reiniciar.center)
+    screen.blit(reiniciar, reinicio_centrado)
+
+#Eventos
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT: # Se verifica si el usuario cerro la ventana
+            running = False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if vidas != 0 and contador_preguntas > 0:
+                if a.collidepoint(event.pos): #funcion collidepoint en este caso verifica en donde se hizo click, en caso de dar "true" en el area de "a" continua. 
+                    if correcto == 0 and error_a == 0:
+                        if lista_respuestas[-1 +contador_preguntas] == "a":
+                            puntaje += 10
+                            correcto = 1
+                            sonido_correcto.play()
+                        else:
+                            vidas -= 1
+                            error_a = 1
+                            sonido_incorrecto.play()
+                elif b.collidepoint(event.pos):
+                    if correcto == 0 and error_b == 0:
+                        if lista_respuestas[-1 +contador_preguntas] == "b":
+                            puntaje += 10
+                            correcto = 1
+                            sonido_correcto.play()
+                        else:
+                            vidas -= 1
+                            error_b = 1
+                            sonido_incorrecto.play()
+                elif c.collidepoint(event.pos):
+                    if correcto == 0 and error_c == 0:
+                        if lista_respuestas[-1 +contador_preguntas] == "c":
+                            puntaje += 10
+                            correcto = 1
+                            sonido_correcto.play()
+                        else:
+                            vidas -= 1
+                            error_c = 1
+                            sonido_incorrecto.play()
+            if rect_pregunta.collidepoint(event.pos):
+                contador_preguntas += 1
+                correcto = 0
+                error_a = 0
+                error_b = 0
+                error_c = 0
+                vidas = 2
+                flag_mensaje_final = 1
+                if contador_preguntas == 1:
+                    puntaje = 0
+            if rect_reiniciar.collidepoint(event.pos):
+                contador_preguntas = 0
+                puntaje = 0
+                flag_mensaje_final = 0
+                vidas = 2
+    if contador_preguntas == 0 and flag_mensaje_final == 1:
+        screen.blit(final,(20,250))
+        if puntaje < 100:
+            screen.blit(mensaje_uno,(40,320))
+            screen.blit(uwu,(490,300))
+        elif puntaje < 170:
+            screen.blit(mensaje_dos,(40,320))
+            screen.blit(uwu,(490,300))
+        else:
+            screen.blit(mensaje_tres,(40,320))
+            screen.blit(mensaje_cuatro,(20,420))
+            screen.blit(tora,(560,280))
+    if contador_preguntas > len(lista):
+        sonido_final.play()
+        contador_preguntas = 0
+    if puntaje >= 999:
+        puntaje = 999
+
+    pygame.display.flip()
+pygame.mixer.quit()
+pygame.quit() # Fin
